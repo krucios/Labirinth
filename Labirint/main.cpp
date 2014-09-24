@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
     //return a.exec();
 
-    Labirint a(10, 10);
+    Labirint a(100, 100);
 
     a.draw();
 
