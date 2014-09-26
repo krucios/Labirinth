@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QWidget>
+#include <QBoxLayout>
+#include <QScrollArea>
 #include "mapwidget.h"
 
 class MainWindow : public QMainWindow

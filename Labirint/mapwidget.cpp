@@ -7,6 +7,9 @@
 #include <math.h>
 
 #define BIG_NUMBER 2000000
+#define WALL Qt::darkRed
+#define HALL Qt::white
+#define CELL_SIZE 10
 
 /*        PRIVATE METHODS        */
 
@@ -168,6 +171,11 @@ void MapWidget::makeBorders()
     }
 }
 
+void MapWidget::changeCellState(const int x, const int y)
+{
+    m_map[x][y] = m_map[x][y] ? 0 : 2;
+}
+
 /*       /PRIVATE METHODS        */
 /*        CONSTUCTORS            */
 
@@ -175,7 +183,8 @@ void MapWidget::makeBorders()
 MapWidget::MapWidget()
     : m_map(nullptr),
       m_n(DEFAULT_SIZE),
-      m_m(DEFAULT_SIZE)
+      m_m(DEFAULT_SIZE),
+      m_cell_size(CELL_SIZE)
 {
     m_map = new int*[DEFAULT_SIZE];
     for (int i = 0; i < DEFAULT_SIZE; ++i)
@@ -188,15 +197,28 @@ MapWidget::MapWidget()
 };
 */
 
-MapWidget::MapWidget(QWidget *parent) :
-    QWidget(parent)
+MapWidget::MapWidget(QWidget *parent)
+    : m_map(nullptr),
+      m_n(DEFAULT_SIZE),
+      m_m(DEFAULT_SIZE),
+      m_cell_size(CELL_SIZE),
+      QWidget(parent)
 {
+    m_map = new int*[DEFAULT_SIZE];
+    for (int i = 0; i < DEFAULT_SIZE; ++i)
+        m_map[i] = new int[DEFAULT_SIZE];
+    if (m_map)
+    {
+        clearMap();
+        generate();
+    }
 }
 
 MapWidget::MapWidget(const int n, const int m)
     : m_map(nullptr),
       m_n(n),
-      m_m(m)
+      m_m(m),
+      m_cell_size(CELL_SIZE)
 {
     m_map = new int*[n];
     for (int i = 0; i < n; ++i)
@@ -223,17 +245,53 @@ MapWidget::~MapWidget()
 /*       /DESTRUCTOR             */
 /*        PUBLIC METHODS         */
 
-void MapWidget::draw()
+QSize MapWidget::sizeHint() const
 {
-    std::cout << std::endl;
-    for (int i = 0; i < m_n; ++i)
-    {
-        for (int j = 0; j < m_m; ++j)
-        {
-            std::cout << (int)m_map[i][j];
-        }
-        std::cout << std::endl;
-    }
+    return QSize(m_n * m_cell_size, m_m * m_cell_size);
+}
+
+QSize MapWidget::minimumSize() const
+{
+    return QSize(m_n * m_cell_size, m_m * m_cell_size);
+}
+
+QSize MapWidget::maximumSize() const
+{
+    return QSize(m_n * m_cell_size, m_m * m_cell_size);
 }
 
 /*       /PUBLIC METHODS         */
+/*        PROTECTED METHODS      */
+
+void MapWidget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.fillRect(event->rect(), QBrush(Qt::darkGray));
+
+    for (int i = 0; i < m_n; i++)
+    {
+        for (int j = 0; j < m_m; j++)
+        {
+            painter.fillRect(i * m_cell_size,
+                                 j * m_cell_size,
+                                 m_cell_size - m_cell_size / 20,
+                                 m_cell_size - m_cell_size / 20,
+                                 //m_map[i][j] ? QBrush(QPixmap("LiveCell_liveCell.png")) : QBrush(QPixmap("LiveCell_deadCell.png"))
+                                 m_map[i][j] ? QBrush(HALL) : QBrush(WALL)
+                                 );
+        }
+    }
+}
+
+void MapWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
+        changeCellState(event->x() / m_cell_size, event->y() / m_cell_size);
+        update();
+    }
+    else
+        QWidget::mousePressEvent(event);
+}
+
+/*       /PROTECTED METHODS      */
